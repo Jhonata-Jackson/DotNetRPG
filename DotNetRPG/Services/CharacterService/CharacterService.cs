@@ -31,9 +31,23 @@ public class CharacterService : ICharacterService
     public async Task<ServiceResponse<GetCharacterDto>> GetCharacterById(int id)
     {
         var serviceResponse = new ServiceResponse<GetCharacterDto>();
+
+        try
+        {
+            var character = characters.FirstOrDefault(c => c.Id == id);
+
+            if (character is null)
+            {
+                throw new Exception($"Character with Id '{id}' not found.");
+            }
         
-        var character = characters.FirstOrDefault(c => c.Id == id);
-        serviceResponse.Data = _mapper.Map<GetCharacterDto>(character);
+            serviceResponse.Data = _mapper.Map<GetCharacterDto>(character);
+        }
+        catch (Exception ex)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = ex.Message;
+        }
 
         return serviceResponse;
     }
