@@ -1,4 +1,5 @@
 global using DotNetRPG.Services.CharacterService;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 
 var app = builder.Build();
