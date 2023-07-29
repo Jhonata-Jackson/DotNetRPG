@@ -30,9 +30,17 @@ namespace DotNetRPG.Controllers
         }
         
         [HttpPost]
-        public async Task<ActionResult<ServiceResponse<List<CreateCharacterDTO>>>> AddCharacter(CreateCharacterDTO newCharacter)
+        public async Task<ActionResult<ServiceResponse<List<AddCharacterDTO>>>> AddCharacter(AddCharacterDTO newCharacter)
         {
             return Ok(await _characterService.AddCharacter(newCharacter));
+        }
+        
+        [HttpPut]
+        public async Task<ActionResult<ServiceResponse<List<AddCharacterDTO>>>> UpdateCharacter(UpdateCharacterDTO updatedCharacter)
+        {
+            var response = await _characterService.UpdateCharacter(updatedCharacter);
+
+            return response.Data is null ?  NotFound(response) : Ok(response);
         }
     }
 }

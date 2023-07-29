@@ -9,6 +9,6 @@ public class CharacterProfile : Profile
     public CharacterProfile()
     {
         CreateMap<Character, GetCharacterDTO>();
-        CreateMap<CreateCharacterDTO, Character>();
+        CreateMap<AddCharacterDTO, Character>();
     }
 }
