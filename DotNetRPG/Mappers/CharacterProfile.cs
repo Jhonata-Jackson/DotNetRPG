@@ -8,7 +8,7 @@ public class CharacterProfile : Profile
 {
     public CharacterProfile()
     {
-        CreateMap<Character, GetCharacterDTO>();
-        CreateMap<AddCharacterDTO, Character>();
+        CreateMap<Character, GetCharacterDto>();
+        CreateMap<AddCharacterDto, Character>();
     }
 }

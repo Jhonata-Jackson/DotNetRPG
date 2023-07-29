@@ -2,7 +2,7 @@
 
 namespace DotNetRPG.Dtos;
 
-public class AddCharacterDTO
+public class AddCharacterDto
 {
     public string Name { get; set; } = "Frodo";
     public int HitPoints { get; set; } = 100;
