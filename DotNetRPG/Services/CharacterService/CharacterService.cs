@@ -1,29 +1,27 @@
 ﻿using AutoMapper;
+using DotNetRPG.Data;
 using DotNetRPG.Dtos;
 using DotNetRPG.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DotNetRPG.Services.CharacterService;
 
 public class CharacterService : ICharacterService
 {
-    private ICharacterService _characterServiceImplementation;
-    
-    private static List<Character> characters = new List<Character>() {
-        new Character(),
-        new Character { Id = 1, Name = "Sam" }
-    };
-
     private readonly IMapper _mapper;
+    private readonly DataContext _dataContext;
 
-    public CharacterService(IMapper mapper)
+    public CharacterService(IMapper mapper, DataContext dataContext)
     {
         _mapper = mapper;
+        _dataContext = dataContext;
     }
     
     public async Task<ServiceResponse<List<GetCharacterDto >>> GetAllCharacters()
     {
         var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
-        serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+        var dbCharacters = await _dataContext.Characters.ToListAsync();
+        serviceResponse.Data = dbCharacters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         
         return serviceResponse;
     }
@@ -34,14 +32,14 @@ public class CharacterService : ICharacterService
 
         try
         {
-            var character = characters.FirstOrDefault(c => c.Id == id);
+            var dbCharacter = await _dataContext.Characters.FirstOrDefaultAsync(c => c.Id == id);
 
-            if (character is null)
+            if (dbCharacter is null)
             {
                 throw new Exception($"Character with Id '{id}' not found.");
             }
         
-            serviceResponse.Data = _mapper.Map<GetCharacterDto>(character);
+            serviceResponse.Data = _mapper.Map<GetCharacterDto>(dbCharacter);
         }
         catch (Exception ex)
         {
@@ -53,13 +51,28 @@ public class CharacterService : ICharacterService
     }
 
     public async Task<ServiceResponse<List<GetCharacterDto>>> AddCharacter(AddCharacterDto newCharacter)
-    {
+    {   
         var serviceResponse = new ServiceResponse<List<GetCharacterDto>>();
-        var character = _mapper.Map<Character>(newCharacter);
+        
+        try
+        {
+            var character = _mapper.Map<Character>(newCharacter);
+            var dbCharacters = await _dataContext.Characters.ToListAsync();
 
-        character.Id = characters.Max(c => c.Id) + 1;
-        characters.Add(character);
-        serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            character.Id = dbCharacters.Max(c => c.Id) + 1;
+            
+           await _dataContext.Characters.AddAsync(character);
+           await _dataContext.SaveChangesAsync();
+           
+           var newCharacterList = await _dataContext.Characters.ToListAsync();
+
+            serviceResponse.Data = _mapper.Map<List<GetCharacterDto>?>(newCharacterList);
+        }
+        catch (Exception ex)
+        {
+            serviceResponse.Success = false;
+            serviceResponse.Message = ex.Message;
+        }
         
         return serviceResponse;
     }
@@ -70,23 +83,25 @@ public class CharacterService : ICharacterService
         
         try
         {
-            var character = characters.FirstOrDefault(c => c.Id == updatedCharacter.Id);
+            var dbCharacter = await _dataContext.Characters.FirstOrDefaultAsync(c => c.Id == updatedCharacter.Id);
 
-            if (character is null)
+            if (dbCharacter is null)
             {
                 throw new Exception($"Character with Id '{updatedCharacter.Id}' not found.");
             }
 
-            _mapper.Map(updatedCharacter, character);
+            _mapper.Map(updatedCharacter, dbCharacter);
 
-            character.Name = updatedCharacter.Name;
-            character.HitPoints = updatedCharacter.HitPoints;
-            character.Strength = updatedCharacter.Strength;
-            character.Defense = updatedCharacter.Defense;
-            character.Intelligence = updatedCharacter.Intelligence;
-            character.Class = updatedCharacter.Class;
+            dbCharacter.Name = updatedCharacter.Name;
+            dbCharacter.HitPoints = updatedCharacter.HitPoints;
+            dbCharacter.Strength = updatedCharacter.Strength;
+            dbCharacter.Defense = updatedCharacter.Defense;
+            dbCharacter.Intelligence = updatedCharacter.Intelligence;
+            dbCharacter.Class = updatedCharacter.Class;
+            
+            await _dataContext.SaveChangesAsync();
 
-            serviceResponse.Data = _mapper.Map<GetCharacterDto>(character);
+            serviceResponse.Data = _mapper.Map<GetCharacterDto>(dbCharacter);
         }
         catch (Exception ex)
         {
@@ -103,16 +118,17 @@ public class CharacterService : ICharacterService
         
         try
         {
-            var character = characters.FirstOrDefault(c => c.Id == id);
+            var dbCharacter = await _dataContext.Characters.FirstOrDefaultAsync(c => c.Id == id);
 
-            if (character is null)
+            if (dbCharacter is null)
             {
                 throw new Exception($"Character with Id '{id}' not found.");
             }
 
-            characters.Remove(character);
+            _dataContext.Characters.Remove(dbCharacter);
+            await _dataContext.SaveChangesAsync();
 
-            serviceResponse.Data = characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
+            serviceResponse.Data = _dataContext.Characters.Select(c => _mapper.Map<GetCharacterDto>(c)).ToList();
         }
         catch (Exception ex)
         {
